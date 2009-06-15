@@ -29,10 +29,18 @@ describe ActionController::Session::JavaServletStore do
     @session_store.call(@env)
   end
 
-  it "should do nothing if the session does not have anything in it" do
+  it "should do nothing if the session is not accessed" do
+    @request.should_receive(:getSession).with(false).and_return @session
+    @app.should_receive(:call)
+    @session_store.call(@env)
+  end
+
+  it "should load the session when accessed" do
     @request.should_receive(:getSession).with(false).and_return @session
     @session.should_receive(:getAttributeNames).and_return []
-    @app.should_receive(:call)
+    @app.should_receive(:call).and_return do |env|
+      env['rack.session']['a']
+    end
     @session_store.call(@env)
   end
 
