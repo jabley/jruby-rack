@@ -27,6 +27,38 @@ module ActionController
       end
     end
   end
+
+  module Session
+    class SessionHash < Hash
+      ENV_SESSION_KEY = 'rack.session'.freeze
+      ENV_SESSION_OPTIONS_KEY = 'rack.session.options'.freeze
+
+      def initialize(by, env)
+        super()
+        @by = by
+        @env = env
+        @loaded = false
+      end
+
+      def [](key)
+        load! unless @loaded
+        super
+      end
+
+      def []=(key, value)
+        load! unless @loaded
+        super
+      end
+
+      private
+      def load!
+        id, session = @by.send(:load_session, @env)
+        (@env[ENV_SESSION_OPTIONS_KEY] ||= {})[:id] = id
+        replace(session)
+        @loaded = true
+      end
+    end
+  end
 end
 
 module ActionView
